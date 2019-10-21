@@ -1,5 +1,5 @@
 name: tcp_scanner
-description: TCP port scanner
+description: TCP port scanner. Scan ports sequentially using connect method.
 version: 1.0.0
 homepage: https://github.com/shpak86/tcp_scanner
 author: ash <shpakovsky86@gmail.com>
