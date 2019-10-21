@@ -1,8 +1,8 @@
 name: tcp_scanner
 description: TCP port scanner
-# version: 1.0.0
-# homepage: https://github.com/shpak86/tcp_scanner
-# author: ash <shpakovsky86@gmail.com>
+version: 1.0.0
+homepage: https://github.com/shpak86/tcp_scanner
+author: ash <shpakovsky86@gmail.com>
 
 environment:
   sdk: '>=2.5.0 <3.0.0'

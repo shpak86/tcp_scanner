@@ -1,6 +1,6 @@
-#TCP port scanner
+# TCP port scanner
 
-Scanner performs sequential connect scan of specified ports on port ranges.
+Scanner performs sequential connect scan of specified ports or port ranges.
 
 ## Usage
 To use this package add `tcp_scanner` as a dependency in your pubspec.yaml. To run scan use TCPScanner class. 
