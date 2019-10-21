@@ -12,12 +12,16 @@ class TCPScanner {
 
   /// Scan results
   ScanResult scanResult = ScanResult();
+  Duration _connectTimeout;
 
   /// Prepares scanner to scan specified host and specified ports
-  TCPScanner(this._host, this._ports);
+  TCPScanner(this._host, this._ports, {int timeout = 100}) {
+    _connectTimeout = Duration(milliseconds: timeout);
+  }
 
   /// Prepares scanner to scan range of ports from startPort to endPort
-  TCPScanner.range(this._host, int startPort, int endPort) {
+  TCPScanner.range(this._host, int startPort, int endPort, {int timeout = 100}) {
+    _connectTimeout = Duration(milliseconds: timeout);
     _ports = [];
     for (int port = startPort; port <= endPort; port++) {
       _ports.add(port);
@@ -30,7 +34,7 @@ class TCPScanner {
     scanResult = ScanResult(host: _host, ports: _ports, status: ScanStatuses.scanning);
     for (int port in _ports) {
       try {
-        connection = await Socket.connect(_host, port, timeout: Duration(seconds: 1));
+        connection = await Socket.connect(_host, port, timeout: _connectTimeout);
         scanResult.addOpen(port);
       } catch (e) {
         if (e.osError != null && e.osError.errorCode == 61) scanResult.addClosed(port);

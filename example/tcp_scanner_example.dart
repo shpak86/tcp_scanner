@@ -17,6 +17,25 @@ main() {
     print("Elapsed time:  ${result.elapsed / 1000}s\n");
   });
 
+  // Scan unreachable ports or hosts with connect timeout 300ms. Default timeout is 100ms.
+  TCPScanner(
+          "192.168.1.1",
+          [
+            80,
+            8080,
+            443
+          ],
+          timeout: 300)
+      .scan()
+      .then((result) {
+    print("\nHTTP ports scan result");
+    print("Host:          ${result.host}");
+    print("Scanned ports: ${result.ports}");
+    print("Open ports:    ${result.open}");
+    print("Closed ports:  ${result.closed}");
+    print("Elapsed time:  ${result.elapsed / 1000}s\n");
+  });
+
   // Scan ports 20 - 1000
   TCPScanner.range("127.0.0.1", 20, 1000).scan().then((result) {
     print("\n20-1000 ports scan result");
