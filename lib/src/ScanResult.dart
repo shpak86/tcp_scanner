@@ -40,6 +40,7 @@ class ScanResult {
     if (closed != null) this.closed = closed;
     if (scanned != null) this.scanned = scanned;
     if (status != null) this.status = status;
+    if (this.status == ScanStatuses.scanning) _startTime = DateTime.now();
   }
 
   /// Creation object from JSON
@@ -120,9 +121,14 @@ class ScanResult {
   get elapsed {
     if (_elapsed != null) {
       return _elapsed;
+    } else if (_startTime == null) {
+      return -1;
     } else {
-      // return -1 if start time is undefined or difference between start time and current time in other case
-      return _startTime == null ? -1 : DateTime.now().difference(_startTime).inMilliseconds;
+      return DateTime.now().difference(_startTime).inMilliseconds;
     }
+  }
+
+  set elapsed(value) {
+    _elapsed = value;
   }
 }

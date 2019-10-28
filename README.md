@@ -69,7 +69,7 @@ Closed ports:  []
 Elapsed time:  0.924s
 ```
 
-Scan ports range:
+You can use `TCPScanner.range` constructor if you wan to scan ports range:
 
 ```dart
 import 'package:tcp_scanner/tcp_scanner.dart';
@@ -85,7 +85,7 @@ main() {
 }
 ```
 
-Getting information about running scan:
+While scan is running you can take current status. Just see TCPScanner.scanResult. Getting information about running scan:
 
 ```dart
 import 'dart:async';
@@ -93,7 +93,7 @@ import 'package:tcp_scanner/tcp_scanner.dart';
 
 main() {
   var tcpScanner = TCPScanner.range("127.0.0.1", 20, 5000);
-  var timer = Timer.periodic(Duration(seconds: 2), (timer) {
+  var timer = Timer.periodic(Duration(seconds: 1), (timer) {
     var scanProgress = 100.0 * (tcpScanner.scanResult.scanned.length / tcpScanner.scanResult.ports.length);
     print("Progress ${scanProgress.toStringAsPrecision(3)}%");
   });
@@ -106,6 +106,54 @@ main() {
     print("Elapsed time:  ${result.elapsed / 1000}s\n");
   });
 }
+```
+
+Output:
+
+```
+Progress 0.00%
+Progress 5.18%
+...
+Progress 91.3%
+Progress 96.5%
+
+20-5000 ports scan result
+Host:          127.0.0.1
+Scanned ports: 20-5000
+Open ports:    [1024, 1025, 1026, 1027, 1028]
+Elapsed time:  35.971s
+```
+This scan takes about 36 seconds. You can improve this time by set `isolates` argument. Also you can shuffle ports using `shuffle` option.
+```dart
+  var multithreadedScanner = TCPScanner.range("127.0.0.1", 20, 5000, isolates: 10, shuffle: true);
+  var multithreadedTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+    var scanProgress = 100.0 * (multithreadedScanner.scanResult.scanned.length / multithreadedScanner.scanResult.ports.length);
+    print("Progress ${scanProgress.toStringAsPrecision(3)}%");
+  });
+  multithreadedScanner.scan().then((result) {
+    multithreadedTimer.cancel();
+    print("\n20-5000 ports scan result");
+    print("Host:          ${result.host}");
+    print("Scanned ports: 20-5000");
+    print("Open ports:    ${result.open}");
+    print("Elapsed time:  ${result.elapsed / 1000}s\n");
+  });
+```
+
+This scan takes about 17 seconds. Open ports shuffled because we used `shuffle` option and ports was scanned in random order. Ports will be shuffled each call of scan().
+
+```
+Progress 0.00%
+Progress 8.71%
+...
+Progress 91.1%
+Progress 98.4%
+
+20-5000 ports scan result
+Host:          127.0.0.1
+Scanned ports: 20-5000
+Open ports:    [1028, 1025, 1026, 1024, 1027]
+Elapsed time:  17.62s
 ```
 
 ## Features and bugs

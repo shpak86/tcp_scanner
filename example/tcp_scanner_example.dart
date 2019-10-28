@@ -47,12 +47,27 @@ main() {
 
   // Scan ports range and display scan progress
   var tcpScanner = TCPScanner.range("127.0.0.1", 20, 5000);
-  var timer = Timer.periodic(Duration(seconds: 2), (timer) {
+  var timer = Timer.periodic(Duration(seconds: 1), (timer) {
     var scanProgress = 100.0 * (tcpScanner.scanResult.scanned.length / tcpScanner.scanResult.ports.length);
     print("Progress ${scanProgress.toStringAsPrecision(3)}%");
   });
   tcpScanner.scan().then((result) {
     timer.cancel();
+    print("\n20-5000 ports scan result");
+    print("Host:          ${result.host}");
+    print("Scanned ports: 20-5000");
+    print("Open ports:    ${result.open}");
+    print("Elapsed time:  ${result.elapsed / 1000}s\n");
+  });
+
+  // Multithreading scan
+  var multithreadedScanner = TCPScanner.range("127.0.0.1", 20, 5000, isolates: 10, shuffle: true);
+  var multithreadedTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+    var scanProgress = 100.0 * (multithreadedScanner.scanResult.scanned.length / multithreadedScanner.scanResult.ports.length);
+    print("Progress ${scanProgress.toStringAsPrecision(3)}%");
+  });
+  multithreadedScanner.scan().then((result) {
+    multithreadedTimer.cancel();
     print("\n20-5000 ports scan result");
     print("Host:          ${result.host}");
     print("Scanned ports: 20-5000");
