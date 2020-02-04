@@ -11,6 +11,5 @@
 - Added ports shuffle option
 - Fixed elapsed time calculation bug
 
-
-## 1.1.2
+## 1.1.1
 - Added ability to scan with or without multithreading

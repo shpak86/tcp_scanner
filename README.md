@@ -13,12 +13,14 @@ import 'package:tcp_scanner/tcp_scanner.dart';
 
 main() {
   TCPScanner("localhost", [ 80, 8080, 443 ]).scan().then((result) {
-    print("\nHTTP ports scan result");
-    print("Host:          ${result.host}");
-    print("Scanned ports: ${result.ports}");
-    print("Open ports:    ${result.open}");
-    print("Closed ports:  ${result.closed}");
-    print("Elapsed time:  ${result.elapsed / 1000}s\n");
+    print('''
+HTTP ports scan result
+Host:          ${result.host}
+Scanned ports: ${result.ports}
+Open ports:    ${result.open}
+Closed ports:  ${result.closed}
+Elapsed time:  ${result.elapsed / 1000}s
+''');
   });
 }
 ```
@@ -50,12 +52,14 @@ main() {
           timeout: 300)
       .scan()
       .then((result) {
-    print("\nHTTP ports scan result");
-    print("Host:          ${result.host}");
-    print("Scanned ports: ${result.ports}");
-    print("Open ports:    ${result.open}");
-    print("Closed ports:  ${result.closed}");
-    print("Elapsed time:  ${result.elapsed / 1000}s\n");
+    print('''
+HTTP ports scan result
+Host:          ${result.host}
+Scanned ports: ${result.ports}
+Open ports:    ${result.open}
+Closed ports:  ${result.closed}
+Elapsed time:  ${result.elapsed / 1000}s
+''');
   });
 }
 ```
@@ -76,11 +80,13 @@ import 'package:tcp_scanner/tcp_scanner.dart';
 
 main() {
   TCPScanner.range("127.0.0.1", 20, 1000).scan().then((result) {
-    print("\n20-1000 ports scan result");
-    print("Host:           ${result.host}");
-    print("Scanned ports:  20-1000");
-    print("Open ports:     ${result.open}");
-    print("Elapsed time:   ${result.elapsed / 1000}s\n");
+    print('''
+20-1000 ports scan result
+Host:           ${result.host}
+Scanned ports:  20-1000
+Open ports:     ${result.open}
+Elapsed time:   ${result.elapsed / 1000}s
+''');
   });
 }
 ```
@@ -99,11 +105,13 @@ main() {
   });
   tcpScanner.scan().then((result) {
     timer.cancel();
-    print("\n20-5000 ports scan result");
-    print("Host:          ${result.host}");
-    print("Scanned ports: 20-5000");
-    print("Open ports:    ${result.open}");
-    print("Elapsed time:  ${result.elapsed / 1000}s\n");
+    print('''
+20-5000 ports scan result
+Host:          ${result.host}
+Scanned ports: 20-5000
+Open ports:    ${result.open}
+Elapsed time:  ${result.elapsed / 1000}s
+''');
   });
 }
 ```
@@ -132,11 +140,13 @@ This scan takes about 36 seconds. You can improve this time by set `isolates` ar
   });
   multithreadedScanner.scan().then((result) {
     multithreadedTimer.cancel();
-    print("\n20-5000 ports scan result");
-    print("Host:          ${result.host}");
-    print("Scanned ports: 20-5000");
-    print("Open ports:    ${result.open}");
-    print("Elapsed time:  ${result.elapsed / 1000}s\n");
+    print('''
+20-5000 ports scan result
+Host:          ${result.host}
+Scanned ports: 20-5000
+Open ports:    ${result.open}
+Elapsed time:  ${result.elapsed / 1000}s
+''');
   });
 ```
 
@@ -156,7 +166,24 @@ Open ports:    [1028, 1025, 1026, 1024, 1027]
 Elapsed time:  17.62s
 ```
 
-If for any reason you do not want scanning on isolates, use the `noIsolateScan` method instead of `scan`.
+If for any reason you do not want scanning on isolates, use the `noIsolateScan` method instead of `scan`:
+
+```dart
+import 'package:tcp_scanner/tcp_scanner.dart';
+
+main() {
+  TCPScanner("localhost", [ 80, 8080, 443 ]).noIsolateScan().then((result) {
+    print('''
+HTTP ports scan result
+Host:          ${result.host}
+Scanned ports: ${result.ports}
+Open ports:    ${result.open}
+Closed ports:  ${result.closed}
+Elapsed time:  ${result.elapsed / 1000}s
+''');
+  });
+}
+```
 
 ## Features and bugs
 
