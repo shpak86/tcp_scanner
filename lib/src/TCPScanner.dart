@@ -55,17 +55,21 @@ class TCPScanner {
     ScanResult result = ScanResult(status: ScanStatuses.finished);
     _isolateScanResults.forEach((isolateResult) {
       result.host = isolateResult.host;
-      result..ports.addAll(isolateResult.ports)..scanned.addAll(isolateResult.scanned)..open.addAll(isolateResult.open)..closed.addAll(isolateResult.closed);
+      result
+        ..ports.addAll(isolateResult.ports)
+        ..scanned.addAll(isolateResult.scanned)
+        ..open.addAll(isolateResult.open)
+        ..closed.addAll(isolateResult.closed);
     });
     result.status = _scanResult.status;
     result.elapsed = _scanResult.elapsed;
     return result;
   }
 
-  /// Execute scanning
+  /// Execute scanning with at least 1 isolates
   Future<ScanResult> scan() async {
     // Prepare port ranges for isolates
-    int isolatesCount = _isolatesCount > _ports.length ? _ports.length : _isolatesCount;
+    int isolatesCount = _isolatesCount;
     List<List<int>> isolatePorts = [];
     int portsPerIsolate = (_ports.length / isolatesCount).ceil();
     int startIndex = 0, endIndex = 0;
@@ -104,6 +108,25 @@ class TCPScanner {
     await Future.wait(completers.map((completer) => completer.future));
     _scanResult.status = ScanStatuses.finished;
     completers.clear();
+    return scanResult;
+  }
+
+  /// Execute scanning with no isolates
+  Future<ScanResult> noIsolateScan() async {
+    Socket connection;
+    final scanResult = ScanResult(host: _host, ports: _ports, status: ScanStatuses.scanning);
+    for (int port in _ports) {
+      try {
+        connection = await Socket.connect(_host, port, timeout: _connectTimeout);
+        scanResult.addOpen(port);
+      } catch (e) {
+        if (e.osError != null && e.osError.errorCode == 61) scanResult.addClosed(port);
+      } finally {
+        if (connection != null) connection.destroy();
+        scanResult.addScanned(port);
+      }
+    }
+    scanResult.status = ScanStatuses.finished;
     return scanResult;
   }
 

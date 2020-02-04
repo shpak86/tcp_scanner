@@ -3,7 +3,7 @@
 Scanner performs sequential connect scan of specified ports or port ranges.
 
 ## Usage
-To use this package add `tcp_scanner` as a dependency in your pubspec.yaml. To run scan use TCPScanner class. 
+To use this package add `tcp_scanner` as a dependency in your pubspec.yaml. To run scan use TCPScanner class.
 ScanResult contains scanning report. If you need to get running scan status, you have to use TCPScanner.scanResult field.
 
 Scan specified ports:
@@ -35,7 +35,7 @@ Elapsed time:  0.03s
 ```
 
 If you scan unreachable hosts, ports are not added to `closed` list. You can set timeout time using `timeout` argument in TCPScanner constructor. By default timeout is 100ms.
-Scan below elapsed about 900 ms because it scans 3 ports with 300ms timeout. 
+Scan below elapsed about 900 ms because it scans 3 ports with 300ms timeout.
 ```dart
 import 'package:tcp_scanner/tcp_scanner.dart';
 
@@ -155,6 +155,8 @@ Scanned ports: 20-5000
 Open ports:    [1028, 1025, 1026, 1024, 1027]
 Elapsed time:  17.62s
 ```
+
+If for any reason you do not want scanning on isolates, use the `noIsolateScan` method instead of `scan`.
 
 ## Features and bugs
 
