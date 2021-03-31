@@ -1,10 +1,10 @@
 name: tcp_scanner
 description: TCP port scanner. Scan ports sequentially using connect method.
-version: 1.1.1
+version: 1.1.2
 homepage: https://github.com/shpak86/tcp_scanner
 
 environment:
-  sdk: '>=2.5.0 <3.0.0'
+  sdk: '>=2.12.0 <3.0.0'
 
 dev_dependencies:
   pedantic: ^1.8.0

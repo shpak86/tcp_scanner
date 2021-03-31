@@ -10,22 +10,22 @@ import 'ScanResult.dart';
 /// TCP port scanner
 class TCPScanner {
   /// Host to scan
-  String _host;
+  String _host = '';
 
   /// List of scanning ports
-  List<int> _ports;
+  List<int> _ports = [];
 
   /// Scan results
   ScanResult _scanResult = ScanResult();
 
-  /// Time in milliseconds while wait for port response. If port doesn't receive answer in this time it marks as unreachable.
-  Duration _connectTimeout;
+  /// Connection timeout. If the port doesn't receive an answer during this period it will be marked as unreachable.
+  Duration _connectTimeout = Duration(microseconds: 100);
 
-  /// Do shuffle each scan
-  bool _shuffle;
+  /// Shuffle each scan
+  late bool _shuffle;
 
   /// Count of isolates
-  int _isolatesCount;
+  late int _isolatesCount;
 
   /// Isolates ScanResults
   List<ScanResult> _isolateScanResults = [];
@@ -37,12 +37,12 @@ class TCPScanner {
 
   /// Prepares scanner to scan range of ports from startPort to endPort
   TCPScanner.range(String host, int startPort, int endPort, {int timeout = 100, bool shuffle = false, int isolates = 1}) {
-    List<int> ports = List.generate(max(startPort, endPort) + 1 - min(startPort, endPort), (i) => min(startPort, endPort) + i);
+    var ports = List.generate(max(startPort, endPort) + 1 - min(startPort, endPort), (i) => min(startPort, endPort) + i);
     _build(host, ports, timeout: timeout, shuffle: shuffle, isolates: isolates);
   }
 
   /// Build scan settings
-  _build(String host, List<int> ports, {int timeout = 100, bool shuffle = false, int isolates = 1}) {
+  void _build(String host, List<int> ports, {int timeout = 100, bool shuffle = false, int isolates = 1}) {
     _host = host;
     _ports = ports;
     _connectTimeout = Duration(milliseconds: timeout);
@@ -52,14 +52,10 @@ class TCPScanner {
 
   /// Return scan status
   ScanResult get scanResult {
-    ScanResult result = ScanResult(status: ScanStatuses.finished);
+    var result = ScanResult(status: ScanStatuses.finished);
     _isolateScanResults.forEach((isolateResult) {
       result.host = isolateResult.host;
-      result
-        ..ports.addAll(isolateResult.ports)
-        ..scanned.addAll(isolateResult.scanned)
-        ..open.addAll(isolateResult.open)
-        ..closed.addAll(isolateResult.closed);
+      result..ports.addAll(isolateResult.ports)..scanned.addAll(isolateResult.scanned)..open.addAll(isolateResult.open)..closed.addAll(isolateResult.closed);
     });
     result.status = _scanResult.status;
     result.elapsed = _scanResult.elapsed;
@@ -80,16 +76,16 @@ class TCPScanner {
       isolatePorts.add(ports.sublist(startIndex, endIndex));
       startIndex = endIndex;
     }
-    // Scanning result
+    // Scan result
     _isolateScanResults = [];
     _scanResult = ScanResult(host: _host, ports: _ports, status: ScanStatuses.scanning);
     // Run isolates and create listeners
-    List<Completer> completers = [];
+    var completers = <Completer>[];
     for (List<int> portsList in isolatePorts) {
-      Completer completer = Completer();
-      ReceivePort receivePort = ReceivePort();
+      var completer = Completer();
+      var receivePort = ReceivePort();
+      var isolateScanResult = ScanResult(host: _host, ports: portsList, status: ScanStatuses.scanning);
       completers.add(completer);
-      ScanResult isolateScanResult = ScanResult(host: _host, ports: portsList, status: ScanStatuses.scanning);
       _isolateScanResults.add(isolateScanResult);
       await Isolate.spawn(_isolateScan, IsolateArguments(receivePort.sendPort, _host, portsList, _connectTimeout));
       receivePort.listen((result) {
@@ -104,7 +100,7 @@ class TCPScanner {
         }
       });
     }
-    // Wait while all isolates finished
+    // Wait until all isolates finished
     await Future.wait(completers.map((completer) => completer.future));
     _scanResult.status = ScanStatuses.finished;
     completers.clear();
@@ -113,14 +109,14 @@ class TCPScanner {
 
   /// Execute scanning with no isolates
   Future<ScanResult> noIsolateScan() async {
-    Socket connection;
+    Socket? connection;
     final scanResult = ScanResult(host: _host, ports: _ports, status: ScanStatuses.scanning);
-    for (int port in _ports) {
+    for (var port in _ports) {
       try {
         connection = await Socket.connect(_host, port, timeout: _connectTimeout);
         scanResult.addOpen(port);
       } catch (e) {
-        if (e.osError != null && e.osError.errorCode == 61) scanResult.addClosed(port);
+        scanResult.addClosed(port);
       } finally {
         if (connection != null) connection.destroy();
         scanResult.addScanned(port);
@@ -131,9 +127,9 @@ class TCPScanner {
   }
 
   /// Isolated port scanner
-  static _isolateScan(IsolateArguments arguments) async {
-    ScanResult scanResult = ScanResult(host: arguments.host, ports: arguments.ports, status: ScanStatuses.scanning);
-    Socket connection;
+  static void _isolateScan(IsolateArguments arguments) async {
+    var scanResult = ScanResult(host: arguments.host, ports: arguments.ports, status: ScanStatuses.scanning);
+    Socket? connection;
     var timer = Timer.periodic(Duration(seconds: 1), (timer) {
       arguments.sendPort.send(scanResult);
     });
@@ -142,15 +138,13 @@ class TCPScanner {
         scanResult.status = ScanStatuses.finished;
         arguments.sendPort.send(scanResult);
         timer.cancel();
-        throw Exception("Invalid port: $port");
+        throw Exception('Invalid port: $port');
       } else {
         try {
           connection = await Socket.connect(arguments.host, port, timeout: arguments.timeout);
           scanResult.addOpen(port);
         } catch (e) {
-          if (e.osError != null && e.osError.errorCode == 61) {
-            scanResult.addClosed(port);
-          }
+          scanResult.addClosed(port);
         } finally {
           if (connection != null) connection.destroy();
           scanResult.addScanned(port);

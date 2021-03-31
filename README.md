@@ -1,10 +1,10 @@
 # TCP port scanner
 
-Scanner performs sequential connect scan of specified ports or port ranges.
+Library allows to scan ports ranges using connect scan. 
 
 ## Usage
-To use this package add `tcp_scanner` as a dependency in your pubspec.yaml. To run scan use TCPScanner class.
-ScanResult contains scanning report. If you need to get running scan status, you have to use TCPScanner.scanResult field.
+To use this package add `tcp_scanner` as a dependency in your `pubspec.yaml`.
+`ScanResult` contains scanning report. If you need to get running scan status, you have to use `TCPScanner.scanResult` field.
 
 Scan specified ports:
 
@@ -36,7 +36,7 @@ Closed ports:  [80, 8080, 443]
 Elapsed time:  0.03s
 ```
 
-If you scan unreachable hosts, ports are not added to `closed` list. You can set timeout time using `timeout` argument in TCPScanner constructor. By default timeout is 100ms.
+If you scan unreachable hosts, ports are not added to `closed` list. You can set timeout time using `timeout` argument in `TCPScanner` constructor. By default timeout is 100ms.
 Scan below elapsed about 900 ms because it scans 3 ports with 300ms timeout.
 ```dart
 import 'package:tcp_scanner/tcp_scanner.dart';
@@ -91,7 +91,7 @@ Elapsed time:   ${result.elapsed / 1000}s
 }
 ```
 
-While scan is running you can take current status. Just see TCPScanner.scanResult. Getting information about running scan:
+While scan is running you can take current status. Just see `TCPScanner.scanResult`. Getting information about running scan:
 
 ```dart
 import 'dart:async';
@@ -150,7 +150,7 @@ Elapsed time:  ${result.elapsed / 1000}s
   });
 ```
 
-This scan takes about 17 seconds. Open ports shuffled because we used `shuffle` option and ports was scanned in random order. Ports will be shuffled each call of scan().
+This scan takes about 17 seconds. Open ports shuffled because we used `shuffle` option and ports was scanned in random order. Ports will be shuffled each call of `scan()`.
 
 ```
 Progress 0.00%
