@@ -29,7 +29,7 @@ class ScanResult {
   List<int> scanned = [];
 
   /// Elapsed time. It can be null if scanning is in progress.
-  int? _elapsed ;
+  int? _elapsed;
 
   /// Time when status changed to scanning
   DateTime? _startTime;
@@ -47,8 +47,8 @@ class ScanResult {
     this.open.addAll(open);
     this.closed.addAll(closed);
     this.scanned.addAll(scanned);
-    if (this.status == ScanStatuses.scanning) _startTime = DateTime.now();
     _status = status;
+    if (status != ScanStatuses.finished) _startTime = DateTime.now();
   }
 
   /// Creation object from JSON
@@ -64,19 +64,11 @@ class ScanResult {
     } else if (_status == ScanStatuses.finished) {
       statusString = 'finished';
     }
-    return {
-      keyHost: host,
-      keyPorts: ports,
-      keyScanned: scanned,
-      keyOpen: open,
-      keyClosed: closed,
-      keyElapsed: elapsed,
-      keyStatus: statusString
-    };
+    return {keyHost: host, keyPorts: ports, keyScanned: scanned, keyOpen: open, keyClosed: closed, keyElapsed: elapsed, keyStatus: statusString};
   }
 
   /// Deserialize from JSON
-  fromJson(String json) {
+  void fromJson(String json) {
     Map<String, dynamic> map = jsonDecode(json);
     if (map.containsKey(keyHost)) host = map[keyHost].toString();
     if (map.containsKey(keyPorts)) ports = List<int>.from(map[keyPorts]);
@@ -96,16 +88,16 @@ class ScanResult {
   }
 
   /// Add single port
-  addPort(int port) => ports.add(port);
+  void addPort(int port) => ports.add(port);
 
   /// Add open port
-  addOpen(int port) => open.add(port);
+  void addOpen(int port) => open.add(port);
 
   /// Add closed port
-  addClosed(int port) => closed.add(port);
+  void addClosed(int port) => closed.add(port);
 
   /// Add scanned port
-  addScanned(int port) => scanned.add(port);
+  void addScanned(int port) => scanned.add(port);
 
   /// Sets status, and modifies startTime and finishTime. If status is finished then modifies _elapsedTime.
   set status(value) {
@@ -113,23 +105,25 @@ class ScanResult {
     if (value == ScanStatuses.scanning) {
       _startTime = DateTime.now();
     } else if (value == ScanStatuses.finished) {
-      _finishTime = DateTime.now();
-      // If the start time is undefined set it the same as the end time
-      _startTime ??= _finishTime;
-      _elapsed = _finishTime!.difference(_startTime!).inMilliseconds;
+      if (_startTime == null) {
+        _elapsed = -1;
+      } else {
+        _finishTime = DateTime.now();
+        _elapsed = _finishTime!.difference(_startTime!).inMilliseconds;
+      }
     }
   }
 
   /// Returns current scanning status
-  get status => _status;
+  ScanStatuses get status => _status;
 
   /// Returns elapsed scan time in milliseconds.
   /// If scanning is still in progress then returns difference between scan start and current time.
   /// If the start time is undefined return -1
-  get elapsed {
+  int get elapsed {
     if (_elapsed != null) {
-      return _elapsed;
-    } else if (_startTime == null) {
+      return _elapsed!;
+    } else if (_startTime == null || _finishTime == null) {
       return -1;
     } else {
       return DateTime.now().difference(_startTime!).inMilliseconds;

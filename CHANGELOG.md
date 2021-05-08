@@ -13,3 +13,7 @@
 
 ## 1.1.1
 - Added ability to scan with or without multithreading
+
+## 1.1.2
+- Ureachable ports are marking as closed.
+- Added result update interval parameter.

@@ -30,24 +30,33 @@ class TCPScanner {
   /// Isolates ScanResults
   List<ScanResult> _isolateScanResults = [];
 
+  /// Results update interval
+  late Duration _updateInterval;
+
   /// Prepares scanner to scan specified host and specified ports
-  TCPScanner(String host, List<int> ports, {int timeout = 100, bool shuffle = false, int isolates = 1}) {
-    _build(host, ports, timeout: timeout, shuffle: shuffle, isolates: isolates);
-  }
+  TCPScanner(String host, List<int> ports,
+      {int timeout = 100, bool shuffle = false, int isolates = 1, Duration updateInterval = const Duration(seconds: 1)})
+      : this.build(host, ports, timeout, shuffle, isolates, updateInterval);
 
   /// Prepares scanner to scan range of ports from startPort to endPort
-  TCPScanner.range(String host, int startPort, int endPort, {int timeout = 100, bool shuffle = false, int isolates = 1}) {
-    var ports = List.generate(max(startPort, endPort) + 1 - min(startPort, endPort), (i) => min(startPort, endPort) + i);
-    _build(host, ports, timeout: timeout, shuffle: shuffle, isolates: isolates);
-  }
+  TCPScanner.range(String host, int startPort, int endPort,
+      {int timeout = 100, bool shuffle = false, int isolates = 1, Duration updateInterval = const Duration(seconds: 1)})
+      : this.build(
+            host,
+            List.generate(max(startPort, endPort) + 1 - min(startPort, endPort), (i) => min(startPort, endPort) + i),
+            timeout,
+            shuffle,
+            isolates,
+            updateInterval);
 
-  /// Build scan settings
-  void _build(String host, List<int> ports, {int timeout = 100, bool shuffle = false, int isolates = 1}) {
+  /// All arguments constructor
+  TCPScanner.build(String host, List<int> ports, int timeout, bool shuffle, int isolates, Duration updateInterval) {
     _host = host;
     _ports = ports;
     _connectTimeout = Duration(milliseconds: timeout);
     _shuffle = shuffle;
     _isolatesCount = isolates;
+    _updateInterval = updateInterval;
   }
 
   /// Return scan status
@@ -55,7 +64,11 @@ class TCPScanner {
     var result = ScanResult(status: ScanStatuses.finished);
     _isolateScanResults.forEach((isolateResult) {
       result.host = isolateResult.host;
-      result..ports.addAll(isolateResult.ports)..scanned.addAll(isolateResult.scanned)..open.addAll(isolateResult.open)..closed.addAll(isolateResult.closed);
+      result
+        ..ports.addAll(isolateResult.ports)
+        ..scanned.addAll(isolateResult.scanned)
+        ..open.addAll(isolateResult.open)
+        ..closed.addAll(isolateResult.closed);
     });
     result.status = _scanResult.status;
     result.elapsed = _scanResult.elapsed;
@@ -65,11 +78,12 @@ class TCPScanner {
   /// Execute scanning with at least 1 isolates
   Future<ScanResult> scan() async {
     // Prepare port ranges for isolates
-    int isolatesCount = _isolatesCount;
-    List<List<int>> isolatePorts = [];
-    int portsPerIsolate = (_ports.length / isolatesCount).ceil();
-    int startIndex = 0, endIndex = 0;
-    List<int> ports = List.from(_ports);
+    var isolatePorts = <List<int>>[];
+    var portsPerIsolate = (_ports.length / _isolatesCount).ceil();
+    var startIndex = 0;
+    var endIndex = 0;
+    var ports = List<int>.from(_ports);
+
     if (_shuffle) ports.shuffle();
     while (startIndex < ports.length) {
       endIndex = startIndex + portsPerIsolate > ports.length ? ports.length : startIndex + portsPerIsolate;
@@ -81,13 +95,14 @@ class TCPScanner {
     _scanResult = ScanResult(host: _host, ports: _ports, status: ScanStatuses.scanning);
     // Run isolates and create listeners
     var completers = <Completer>[];
-    for (List<int> portsList in isolatePorts) {
+    for (var portsList in isolatePorts) {
       var completer = Completer();
       var receivePort = ReceivePort();
       var isolateScanResult = ScanResult(host: _host, ports: portsList, status: ScanStatuses.scanning);
       completers.add(completer);
       _isolateScanResults.add(isolateScanResult);
-      await Isolate.spawn(_isolateScan, IsolateArguments(receivePort.sendPort, _host, portsList, _connectTimeout));
+      await Isolate.spawn(_isolateScan,
+          IsolateArguments(receivePort.sendPort, _host, portsList, _connectTimeout, updateInterval: _updateInterval));
       receivePort.listen((result) {
         // When response received add information to scanResult
         isolateScanResult.scanned = result.scanned;
@@ -108,7 +123,7 @@ class TCPScanner {
   }
 
   /// Execute scanning with no isolates
-  Future<ScanResult> noIsolateScan() async {
+  Future<ScanResult> _noIsolateScan() async {
     Socket? connection;
     final scanResult = ScanResult(host: _host, ports: _ports, status: ScanStatuses.scanning);
     for (var port in _ports) {
@@ -118,7 +133,9 @@ class TCPScanner {
       } catch (e) {
         scanResult.addClosed(port);
       } finally {
-        if (connection != null) connection.destroy();
+        if (connection != null) {
+          connection.destroy();
+        }
         scanResult.addScanned(port);
       }
     }
@@ -130,7 +147,7 @@ class TCPScanner {
   static void _isolateScan(IsolateArguments arguments) async {
     var scanResult = ScanResult(host: arguments.host, ports: arguments.ports, status: ScanStatuses.scanning);
     Socket? connection;
-    var timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    var timer = Timer.periodic(arguments.updateInterval, (timer) {
       arguments.sendPort.send(scanResult);
     });
     for (int port in arguments.ports) {
@@ -142,11 +159,11 @@ class TCPScanner {
       } else {
         try {
           connection = await Socket.connect(arguments.host, port, timeout: arguments.timeout);
+          await connection.close();
           scanResult.addOpen(port);
         } catch (e) {
           scanResult.addClosed(port);
         } finally {
-          if (connection != null) connection.destroy();
           scanResult.addScanned(port);
         }
       }

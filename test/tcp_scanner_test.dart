@@ -11,24 +11,8 @@ void main() {
 
     setUp(() {
       noArgsResult = ScanResult();
-      hostPortsScanningResult = ScanResult(
-          host: 'host',
-          ports: [
-            80,
-            8080,
-            443,
-            3000
-          ],
-          status: ScanStatuses.scanning);
-      hostPortsFinishedResult = ScanResult(
-          host: 'host',
-          ports: [
-            80,
-            8080,
-            443,
-            3000
-          ],
-          status: ScanStatuses.finished);
+      hostPortsScanningResult = ScanResult(host: 'host', ports: [80, 8080, 443, 3000], status: ScanStatuses.scanning);
+      hostPortsFinishedResult = ScanResult(host: 'host', ports: [80, 8080, 443, 3000], status: ScanStatuses.finished);
       deserializedRegularJson = ScanResult.fromJson(regularJsonScanResult);
       deserializedBlankJson = ScanResult.fromJson(blankJsonScanResult);
       scanResultBuilder = ScanResult();
@@ -41,7 +25,7 @@ void main() {
     });
 
     test('Constructor with no arguments test', () {
-      expect(noArgsResult?.host , isNull);
+      expect(noArgsResult?.host, isNull);
       expect(noArgsResult?.ports, isList);
       expect(noArgsResult?.ports, isEmpty);
       expect(noArgsResult?.open, isList);
@@ -58,12 +42,7 @@ void main() {
       expect(
           hostPortsScanningResult?.ports,
           equals(
-            [
-              80,
-              8080,
-              443,
-              3000
-            ],
+            [80, 8080, 443, 3000],
           ));
       expect(hostPortsScanningResult?.status, equals(ScanStatuses.scanning));
 
@@ -71,12 +50,7 @@ void main() {
       expect(
           hostPortsFinishedResult?.ports,
           equals(
-            [
-              80,
-              8080,
-              443,
-              3000
-            ],
+            [80, 8080, 443, 3000],
           ));
       expect(hostPortsFinishedResult?.status, equals(ScanStatuses.finished));
     });
@@ -85,90 +59,31 @@ void main() {
       expect(
           scanResultBuilder?.ports,
           equals(
-            [
-              80,
-              8080,
-              443,
-              3000
-            ],
+            [80, 8080, 443, 3000],
           ));
-      expect(
-          scanResultBuilder?.scanned,
-          equals([
-            80,
-            8080,
-            443
-          ]));
-      expect(
-          scanResultBuilder?.open,
-          equals([
-            80,
-            443
-          ]));
+      expect(scanResultBuilder?.scanned, equals([80, 8080, 443]));
+      expect(scanResultBuilder?.open, equals([80, 443]));
       expect(
           scanResultBuilder?.closed,
           equals([
             8080,
           ]));
-      // this test is not working 8(
-//      expect(scanResultBuilder?.elapsed, greaterThan(0));
+      expect(scanResultBuilder?.elapsed, equals(0));
       expect(scanResultBuilder?.status, equals(ScanStatuses.finished));
     });
 
     test('Serialization tests', () {
-      expect(
-          jsonEncode(ScanResult(
-              host: 'localhost',
-              ports: [
-                900,
-                9000,
-                3030
-              ],
-              open: [
-                9000
-              ],
-              scanned: [
-                900,
-                9000,
-                3030
-              ],
-              closed: [
-                900,
-                3030
-              ],
-              status: ScanStatuses.finished)),
+      expect(jsonEncode(ScanResult(host: 'localhost', ports: [900, 9000, 3030], open: [9000], scanned: [900, 9000, 3030], closed: [900, 3030], status: ScanStatuses.finished)),
           equals('{"host":"localhost","ports":[900,9000,3030],"scanned":[900,9000,3030],"open":[9000],"closed":[900,3030],"elapsed":-1,"status":"finished"}'));
       expect(deserializedRegularJson?.host, equals('localhost'));
       expect(deserializedRegularJson?.ports, isList);
-      expect(
-          deserializedRegularJson?.ports,
-          equals([
-            900,
-            9000,
-            3000,
-            3030
-          ]));
+      expect(deserializedRegularJson?.ports, equals([900, 9000, 3000, 3030]));
       expect(deserializedRegularJson?.scanned, isList);
-      expect(
-          deserializedRegularJson?.scanned,
-          equals([
-            900,
-            9000,
-            3000
-          ]));
+      expect(deserializedRegularJson?.scanned, equals([900, 9000, 3000]));
       expect(deserializedRegularJson?.open, isList);
-      expect(
-          deserializedRegularJson?.open,
-          equals([
-            9000
-          ]));
+      expect(deserializedRegularJson?.open, equals([9000]));
       expect(deserializedRegularJson?.closed, isList);
-      expect(
-          deserializedRegularJson?.closed,
-          equals([
-            900,
-            3000
-          ]));
+      expect(deserializedRegularJson?.closed, equals([900, 3000]));
       expect(deserializedRegularJson?.elapsed, equals(26));
       expect(deserializedRegularJson?.status, equals(ScanStatuses.scanning));
 

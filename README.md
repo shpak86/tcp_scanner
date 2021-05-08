@@ -1,10 +1,11 @@
 # TCP port scanner
 
-Library allows to scan ports ranges using connect scan. 
+This is simple TCP port scanner. Library allows you to get scan status during the scanning. You can use single scan thread or define number of threads to improve perfomance.
 
 ## Usage
-To use this package add `tcp_scanner` as a dependency in your `pubspec.yaml`.
-`ScanResult` contains scanning report. If you need to get running scan status, you have to use `TCPScanner.scanResult` field.
+
+To use this package you have to add `tcp_scanner` as a dependency in your `pubspec.yaml`.
+It's easy to scan a host. You just need to create the `TCPScanner` instance and call `scan` method. The result is stored in `ScanResult` data object.
 
 Scan specified ports:
 
@@ -36,8 +37,10 @@ Closed ports:  [80, 8080, 443]
 Elapsed time:  0.03s
 ```
 
-If you scan unreachable hosts, ports are not added to `closed` list. You can set timeout time using `timeout` argument in `TCPScanner` constructor. By default timeout is 100ms.
-Scan below elapsed about 900 ms because it scans 3 ports with 300ms timeout.
+Sometimes you can not get response from the host or from specified port because of firewall or IDS. In this case port will be marked as `closed`. To define connection establishment timeout you should use `timeout` argumnet in the constructor. By default, timeout is 100ms.
+
+Scan in the following example elapsed about 900 ms because it was scanned 3 ports of the unreachable host with 300ms timeout.
+
 ```dart
 import 'package:tcp_scanner/tcp_scanner.dart';
 
@@ -49,7 +52,7 @@ main() {
             8080,
             443
           ],
-          timeout: 300)
+          timeout: 100)
       .scan()
       .then((result) {
     print('''
@@ -63,17 +66,19 @@ Elapsed time:  ${result.elapsed / 1000}s
   });
 }
 ```
+
 Output:
+
 ```
 HTTP ports scan result
 Host:          192.168.1.1
 Scanned ports: [80, 8080, 443]
 Open ports:    []
-Closed ports:  []
-Elapsed time:  0.924s
+Closed ports:  [80, 8080, 443]
+Elapsed time:  1.016s
 ```
 
-You can use `TCPScanner.range` constructor if you wan to scan ports range:
+You can use `TCPScanner.range` constructor if you want to scan ports range:
 
 ```dart
 import 'package:tcp_scanner/tcp_scanner.dart';
@@ -91,14 +96,14 @@ Elapsed time:   ${result.elapsed / 1000}s
 }
 ```
 
-While scan is running you can take current status. Just see `TCPScanner.scanResult`. Getting information about running scan:
+You can get the current status while scan is running. Just use `TCPScanner.scanResult` to get current status. You can control update interval by `updateInterval` parameter. By default, update interval is 1 second. Getting information about running scan:
 
 ```dart
 import 'dart:async';
 import 'package:tcp_scanner/tcp_scanner.dart';
 
 main() {
-  var tcpScanner = TCPScanner.range("127.0.0.1", 20, 5000);
+  var tcpScanner = TCPScanner.range("127.0.0.1", 20, 50000, updateInterval: Duration(seconds: 5));
   var timer = Timer.periodic(Duration(seconds: 1), (timer) {
     var scanProgress = 100.0 * (tcpScanner.scanResult.scanned.length / tcpScanner.scanResult.ports.length);
     print("Progress ${scanProgress.toStringAsPrecision(3)}%");
@@ -106,9 +111,9 @@ main() {
   tcpScanner.scan().then((result) {
     timer.cancel();
     print('''
-20-5000 ports scan result
+20-50000 ports scan result
 Host:          ${result.host}
-Scanned ports: 20-5000
+Scanned ports: 20-50000
 Open ports:    ${result.open}
 Elapsed time:  ${result.elapsed / 1000}s
 ''');
@@ -120,18 +125,23 @@ Output:
 
 ```
 Progress 0.00%
-Progress 5.18%
-...
-Progress 91.3%
-Progress 96.5%
-
-20-5000 ports scan result
+Progress 7.99%
+Progress 18.2%
+Progress 28.2%
+Progress 38.2%
+Progress 48.8%
+Progress 59.6%
+Progress 70.4%
+Progress 81.1%
+20-50000 ports scan result
 Host:          127.0.0.1
-Scanned ports: 20-5000
-Open ports:    [1024, 1025, 1026, 1027, 1028]
-Elapsed time:  35.971s
+Scanned ports: 20-50000
+Open ports:    [1024, 1025, 1026, 1027, 1028, 1029, 29754]
+Elapsed time:  9.841s
 ```
-This scan takes about 36 seconds. You can improve this time by set `isolates` argument. Also you can shuffle ports using `shuffle` option.
+
+You can improve perfomance by set `isolates` argument. Also, you can shuffle ports using `shuffle` option.
+
 ```dart
   var multithreadedScanner = TCPScanner.range("127.0.0.1", 20, 5000, isolates: 10, shuffle: true);
   var multithreadedTimer = Timer.periodic(Duration(seconds: 1), (timer) {
@@ -150,39 +160,17 @@ Elapsed time:  ${result.elapsed / 1000}s
   });
 ```
 
-This scan takes about 17 seconds. Open ports shuffled because we used `shuffle` option and ports was scanned in random order. Ports will be shuffled each call of `scan()`.
+Open ports is shuffled in the report because `shuffle` option was used and ports were scanned in a random order. Ports will be shuffled each call of `scan()`.
 
 ```
 Progress 0.00%
-Progress 8.71%
-...
-Progress 91.1%
-Progress 98.4%
-
-20-5000 ports scan result
+Progress 21.5%
+Progress 52.4%
+20-50000 ports scan result
 Host:          127.0.0.1
-Scanned ports: 20-5000
-Open ports:    [1028, 1025, 1026, 1024, 1027]
-Elapsed time:  17.62s
-```
-
-If for any reason you do not want scanning on isolates, use the `noIsolateScan` method instead of `scan`:
-
-```dart
-import 'package:tcp_scanner/tcp_scanner.dart';
-
-main() {
-  TCPScanner("localhost", [ 80, 8080, 443 ]).noIsolateScan().then((result) {
-    print('''
-HTTP ports scan result
-Host:          ${result.host}
-Scanned ports: ${result.ports}
-Open ports:    ${result.open}
-Closed ports:  ${result.closed}
-Elapsed time:  ${result.elapsed / 1000}s
-''');
-  });
-}
+Scanned ports: 20-50000
+Open ports:    [1028, 1029, 1024, 1027, 29754, 1026, 1025]
+Elapsed time:  3.535s
 ```
 
 ## Features and bugs
