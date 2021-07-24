@@ -8,6 +8,7 @@ import 'package:tcp_scanner/src/IsolateArguments.dart';
 import 'ScanResult.dart';
 
 /// TCP port scanner
+@Deprecated('Use TcpScannerTask instead of TCPScanner')
 class TCPScanner {
   /// Host to scan
   String _host = '';
