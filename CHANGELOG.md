@@ -7,7 +7,7 @@
 - Added `timeout` argument to TCPScanner constructor. It defines connection timeout in milliseconds while scanner waits for port response.
 
 ## 1.1.0
-- Added ability of multithread scanning
+- Added ability of multithreading scanning
 - Added ports shuffle option
 - Fixed elapsed time calculation bug
 
@@ -15,5 +15,10 @@
 - Added ability to scan with or without multithreading
 
 ## 1.1.2
-- Ureachable ports are marking as closed.
+- Unreachable ports are marking as closed.
 - Added result update interval parameter.
+
+## 2.0.0
+- Developed the TcpScannerTask as the new scanner
+- TCPScanned is deprecated
+- Migrated to null safety 

@@ -12,3 +12,4 @@ doc/api/
 
 # IDEA
 .idea/
+.vscode/launch.json

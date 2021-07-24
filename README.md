@@ -1,10 +1,85 @@
-# TCP port scanner
+# TCP scanner
 
-This is simple TCP port scanner. Library allows you to get scan status during the scanning. You can use single scan thread or define number of threads to improve perfomance.
+Simple and fast TCP scanner.
 
 ## Usage
 
-To use this package you have to add `tcp_scanner` as a dependency in your `pubspec.yaml`.
+### TcpScannerTask
+TcpScannerTask allows you to execute scanning tasks asynchronously and provides basic methods to control task.
+You can set `shuffle` to true if you need to shuffle ports. By default, socket connect timeout is 2 seconds.
+After this time the port will be marked as `closed` if the response wouldn't receive.
+You may change this value by setting `socketTimeout` option. By default `socketTimeout` equals to 100 ms. You can specify the number of isolates to scan by
+defining `parallelism` option. By default, parallelism equals 4.
+
+To execute simple task use start method and wait for result.
+```dart
+final host = '192.168.88.229';
+final ports = List.generate(990, (i) => 10 + i)
+    ..add(5000)
+    ..addAll([1100, 1110]);
+var stopwatch = Stopwatch();
+
+stopwatch.start();
+await TcpScannerTask(host, ports, shuffle: true, parallelism: 2)
+    .start()
+    .then((report) => print('Host $host scan complete\n'
+        'Scanned ports:\t${report.ports.length}\n'
+        'Open ports:\t${report.openPorts}\n'
+        'Elapsed:\t${stopwatch.elapsed}'));
+```
+
+Task can be cancelled using `cancel()` method. It returns a Future with the result of the scan.
+The `cancel` method can throw `TcpScannerTaskException` if task had already finished.
+**Pay attention** that in case of cancelling a Future from the `start()` method won't be returned.
+For example, if you will use `await scannerTask.start()` you will never get the result.
+
+```dart
+var ports = List.generate(50000, (i) => 10 + i);
+var scannerTask = TcpScannerTask(host, ports);
+var stopwatch = Stopwatch();
+
+stopwatch.start();
+Future.delayed(Duration(seconds: 2), () {
+    print('ScannerTask cancelled by timeout after ${stopwatch.elapsed}');
+    scannerTask.cancel()
+    .then((report) => print('Host $host scan was cancelled\n'
+        'Scanned ports:\t${report.ports.length}\n'
+        'Open ports:\t${report.openPorts}\n'
+        'Status:\t${report.status}\n'
+        'Elapsed:\t${stopwatch.elapsed}\n'))
+    .catchError((error) => print(error.cause));
+});
+
+scannerTask.start();
+```
+
+You can request a status during the scanning using the `report` field:
+```dart
+var ports = List.generate(10000, (i) => 10 + i);
+var scannerTask = TcpScannerTask(host, ports);
+
+Timer.periodic(Duration(seconds: 2), (timer) {
+    scannerTask.report.then((report) {
+      // Display scan status every 2 seconds
+      var percents = 100.0 * (report.openPorts.length + report.closedPorts.length) / report.ports.length;
+      print('Host $host scan progress ${percents.toStringAsFixed(1)}%\n'
+          'Scanned ports:\t${report.ports.length}\n'
+          'Open ports:\t${report.openPorts}\n'
+          'Status:\t${report.status}\n'
+          'Elapsed:\t${stopwatch.elapsed}\n');
+      if (report.status == TcpScannerTaskReportStatus.finished) {
+        // Cancel the timer if scanning was completed 
+        timer.cancel();
+      }
+    });
+});
+await scannerTask.start();
+```
+
+### TCPScanner
+
+***This class is deprecated, and it is highly recommended to use TcpScannerTask instead of TCPScanner.***
+
 It's easy to scan a host. You just need to create the `TCPScanner` instance and call `scan` method. The result is stored in `ScanResult` data object.
 
 Scan specified ports:
