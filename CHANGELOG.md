@@ -20,5 +20,8 @@
 
 ## 2.0.0
 - Developed the TcpScannerTask as the new scanner
-- TCPScanned is deprecated
-- Migrated to null safety 
+- TCPScanner is deprecated
+- Migrated to null safety
+
+## 2.0.1
+- Examples improved
