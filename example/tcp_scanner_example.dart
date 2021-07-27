@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:tcp_scanner/tcp_scanner.dart';
 
@@ -10,14 +11,21 @@ main() async {
   var stopwatch = Stopwatch();
   stopwatch.start();
   // Simple scan
-  await TcpScannerTask(host, ports, shuffle: true, parallelism: 2)
-      .start()
-      .then((report) => print('Host $host scan complete\n'
-          'Scanned ports:\t${report.ports.length}\n'
-          'Open ports:\t${report.openPorts}\n'
-          'Status:\t${report.status}\n'
-          'Elapsed:\t${stopwatch.elapsed}\n'));
-
+  try {
+    await TcpScannerTask(host, ports, shuffle: true, parallelism: 2)
+        .start()
+        .then((report) => print('Host $host scan complete\n'
+            'Scanned ports:\t${report.ports.length}\n'
+            'Open ports:\t${report.openPorts}\n'
+            'Status:\t${report.status}\n'
+            'Elapsed:\t${stopwatch.elapsed}\n'))
+        // Catch errors during the scan
+        .catchError((error) => stderr.writeln(error));
+  } on TcpScannerTaskException catch (e) {
+    // Here you can catch exceptions threw in the constructor
+    stderr.writeln('Error: ${e.cause}');
+  }
+/*
   // Cancel scan by delay
   ports = List.generate(50000, (i) => 10 + i);
   var scannerTask1 = TcpScannerTask(host, ports);
@@ -116,5 +124,5 @@ main() async {
     Open ports:    ${result.open}
     Elapsed time:  ${result.elapsed / 1000}s
     ''');
-  });
+  });*/
 }

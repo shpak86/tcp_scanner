@@ -18,6 +18,11 @@ class TcpScannerTask {
 
   TcpScannerTask(this.host, List<int> ports,
       {this.socketTimeout = const Duration(seconds: 1), this.shuffle = false, int parallelism = 4}) {
+    if (ports.isEmpty) {
+      throw TcpScannerTaskException('Ports list is empty');
+    } else if (parallelism < 1) {
+      throw TcpScannerTaskException('\'parallelism\' should be a positive number');
+    }
     //  Copy ports list and shuffle them if it's needed
     var portsList = ports.toSet().toList();
     if (shuffle) portsList.shuffle();
