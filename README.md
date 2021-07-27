@@ -18,14 +18,22 @@ final ports = List.generate(990, (i) => 10 + i)
     ..add(5000)
     ..addAll([1100, 1110]);
 var stopwatch = Stopwatch();
-
 stopwatch.start();
+
+try {
 await TcpScannerTask(host, ports, shuffle: true, parallelism: 2)
     .start()
     .then((report) => print('Host $host scan complete\n'
         'Scanned ports:\t${report.ports.length}\n'
         'Open ports:\t${report.openPorts}\n'
-        'Elapsed:\t${stopwatch.elapsed}'));
+        'Status:\t${report.status}\n'
+        'Elapsed:\t${stopwatch.elapsed}\n'))
+    // Catch errors during the scan
+    .catchError((error) => stderr.writeln(error));
+} on TcpScannerTaskException catch (e) {
+    // Here you can catch exceptions threw in the constructor
+    stderr.writeln('Error: ${e.cause}');
+}
 ```
 
 Task can be cancelled using `cancel()` method. It returns a Future with the result of the scan.
@@ -37,8 +45,8 @@ For example, if you will use `await scannerTask.start()` you will never get the 
 var ports = List.generate(50000, (i) => 10 + i);
 var scannerTask = TcpScannerTask(host, ports);
 var stopwatch = Stopwatch();
-
 stopwatch.start();
+
 Future.delayed(Duration(seconds: 2), () {
     print('ScannerTask cancelled by timeout after ${stopwatch.elapsed}');
     scannerTask.cancel()

@@ -25,3 +25,6 @@
 
 ## 2.0.1
 - Examples improved
+
+## 2.0.2
+- Added exceptions throwing to the constructor
