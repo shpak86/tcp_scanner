@@ -21,18 +21,18 @@ var stopwatch = Stopwatch();
 stopwatch.start();
 
 try {
-await TcpScannerTask(host, ports, shuffle: true, parallelism: 2)
-    .start()
-    .then((report) => print('Host $host scan complete\n'
-        'Scanned ports:\t${report.ports.length}\n'
-        'Open ports:\t${report.openPorts}\n'
-        'Status:\t${report.status}\n'
-        'Elapsed:\t${stopwatch.elapsed}\n'))
-    // Catch errors during the scan
-    .catchError((error) => stderr.writeln(error));
-} on TcpScannerTaskException catch (e) {
+    await TcpScannerTask(host, ports, shuffle: true, parallelism: 2)
+        .start()
+        .then((report) => print('Host ${report.host} scan completed\n'
+            'Scanned ports:\t${report.ports.length}\n'
+            'Open ports:\t${report.openPorts}\n'
+            'Status:\t${report.status}\n'
+            'Elapsed:\t${stopwatch.elapsed}\n'))
+        // Catch errors during the scan
+        .catchError((error) => stderr.writeln(error));
+} catch (e) {
     // Here you can catch exceptions threw in the constructor
-    stderr.writeln('Error: ${e.cause}');
+    stderr.writeln('Error: $e');
 }
 ```
 
@@ -42,46 +42,53 @@ The `cancel` method can throw `TcpScannerTaskException` if task had already fini
 For example, if you will use `await scannerTask.start()` you will never get the result.
 
 ```dart
-var ports = List.generate(50000, (i) => 10 + i);
-var scannerTask = TcpScannerTask(host, ports);
-var stopwatch = Stopwatch();
-stopwatch.start();
-
-Future.delayed(Duration(seconds: 2), () {
-    print('ScannerTask cancelled by timeout after ${stopwatch.elapsed}');
-    scannerTask.cancel()
-    .then((report) => print('Host $host scan was cancelled\n'
-        'Scanned ports:\t${report.ports.length}\n'
-        'Open ports:\t${report.openPorts}\n'
-        'Status:\t${report.status}\n'
-        'Elapsed:\t${stopwatch.elapsed}\n'))
-    .catchError((error) => print(error.cause));
-});
-
-scannerTask.start();
+var ports = List.generate(65535, (i) => 0 + i);
+var stopwatch2 = Stopwatch();
+stopwatch2.start();
+try {
+    var scannerTask1 = TcpScannerTask(host, ports);
+    Future.delayed(Duration(seconds: 2), () {
+        print('ScannerTask cancelled by timeout after ${stopwatch2.elapsed}');
+        scannerTask1
+            .cancel()
+            .then((report) => print('Host ${report.host} scan was cancelled\n'
+                'Scanned ports:\t${report.openPorts.length + report.closedPorts.length}\n'
+                'Open ports:\t${report.openPorts}\n'
+                'Status:\t${report.status}\n'
+                'Elapsed:\t${stopwatch2.elapsed}\n'))
+            .catchError((error) => stderr.writeln(error));
+    });
+    scannerTask1.start();
+} catch (error) {
+    stderr.writeln(error);
+}
 ```
 
 You can request a status during the scanning using the `report` field:
 ```dart
-var ports = List.generate(10000, (i) => 10 + i);
-var scannerTask = TcpScannerTask(host, ports);
-
-Timer.periodic(Duration(seconds: 2), (timer) {
-    scannerTask.report.then((report) {
-      // Display scan status every 2 seconds
-      var percents = 100.0 * (report.openPorts.length + report.closedPorts.length) / report.ports.length;
-      print('Host $host scan progress ${percents.toStringAsFixed(1)}%\n'
-          'Scanned ports:\t${report.ports.length}\n'
-          'Open ports:\t${report.openPorts}\n'
-          'Status:\t${report.status}\n'
-          'Elapsed:\t${stopwatch.elapsed}\n');
-      if (report.status == TcpScannerTaskReportStatus.finished) {
-        // Cancel the timer if scanning was completed 
-        timer.cancel();
-      }
+var ports = List.generate(65535, (i) => 0 + i);
+var stopwatch3 = Stopwatch();
+stopwatch3.start();
+try {
+    var scannerTask2 = TcpScannerTask(host, ports, parallelism: 100);
+    Timer.periodic(Duration(seconds: 1), (timer) {
+        scannerTask2.report.then((report) {
+            var percents = 100.0 * (report.openPorts.length + report.closedPorts.length) / report.ports.length;
+            var scanned = report.closedPorts.length + report.openPorts.length;
+            print('Host $host scan progress ${percents.toStringAsFixed(1)}%\n'
+                'Scanned ports:\t$scanned of ${report.ports.length}\n'
+                'Open ports:\t${report.openPorts}\n'
+                'Status:\t${report.status}\n'
+                'Elapsed:\t${stopwatch3.elapsed}\n');
+            if (report.status == TcpScannerTaskReportStatus.finished) {
+                timer.cancel();
+            }
+        });
     });
-});
-await scannerTask.start();
+    await scannerTask2.start();
+} catch (error) {
+    stderr.writeln(error);
+}
 ```
 
 ### TCPScanner

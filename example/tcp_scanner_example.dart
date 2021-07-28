@@ -8,8 +8,8 @@ main() async {
   var ports = List.generate(1000, (i) => 10 + i)
     ..add(5000)
     ..addAll([1100, 1110]);
-  var stopwatch = Stopwatch();
-  stopwatch.start();
+  var stopwatch1 = Stopwatch();
+  stopwatch1.start();
 
   // Simple scan
   try {
@@ -19,7 +19,7 @@ main() async {
             'Scanned ports:\t${report.ports.length}\n'
             'Open ports:\t${report.openPorts}\n'
             'Status:\t${report.status}\n'
-            'Elapsed:\t${stopwatch.elapsed}\n'))
+            'Elapsed:\t${stopwatch1.elapsed}\n'))
         // Catch errors during the scan
         .catchError((error) => stderr.writeln(error));
   } catch (e) {
@@ -28,31 +28,31 @@ main() async {
   }
 
   // Cancel scanning by delay
-  ports = List.generate(50000, (i) => i);
-  var scannerTask1 = TcpScannerTask(host, ports);
-  stopwatch.start();
+  ports = List.generate(65535, (i) => 0 + i);
+  var stopwatch2 = Stopwatch();
+  stopwatch2.start();
   try {
+    var scannerTask1 = TcpScannerTask(host, ports);
     Future.delayed(Duration(seconds: 2), () {
-      print('ScannerTask cancelled by timeout after ${stopwatch.elapsed}');
+      print('ScannerTask cancelled by timeout after ${stopwatch2.elapsed}');
       scannerTask1
           .cancel()
           .then((report) => print('Host ${report.host} scan was cancelled\n'
-              'Scanned ports:\t${report.ports.length}\n'
+              'Scanned ports:\t${report.openPorts.length + report.closedPorts.length}\n'
               'Open ports:\t${report.openPorts}\n'
               'Status:\t${report.status}\n'
-              'Elapsed:\t${stopwatch.elapsed}\n'))
-          .catchError((error) => print(error));
+              'Elapsed:\t${stopwatch2.elapsed}\n'))
+          .catchError((error) => stderr.writeln(error));
     });
     scannerTask1.start();
-  } catch (e) {
-    print(e);
+  } catch (error) {
+    stderr.writeln(error);
   }
 
   // Get reports during the scanning
-  host = '192.168.88.229';
   ports = List.generate(65535, (i) => 0 + i);
-  stopwatch = Stopwatch();
-  stopwatch.start();
+  var stopwatch3 = Stopwatch();
+  stopwatch3.start();
   try {
     var scannerTask2 = TcpScannerTask(host, ports, parallelism: 100);
     Timer.periodic(Duration(seconds: 1), (timer) {
@@ -63,14 +63,14 @@ main() async {
             'Scanned ports:\t$scanned of ${report.ports.length}\n'
             'Open ports:\t${report.openPorts}\n'
             'Status:\t${report.status}\n'
-            'Elapsed:\t${stopwatch.elapsed}\n');
+            'Elapsed:\t${stopwatch3.elapsed}\n');
         if (report.status == TcpScannerTaskReportStatus.finished) {
           timer.cancel();
         }
       });
     });
     await scannerTask2.start();
-  } catch (e) {
-    print(e);
+  } catch (error) {
+    stderr.writeln(error);
   }
 }

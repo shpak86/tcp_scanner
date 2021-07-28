@@ -31,3 +31,6 @@
 
 ## 2.0.3
 - Exceptions throwing fix
+
+## 2.0.4
+- Examples and readme improvements
