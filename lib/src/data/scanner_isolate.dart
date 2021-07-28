@@ -94,17 +94,13 @@ class ScannerIsolate {
     });
     // Scan ports
     for (var port in ports) {
-      if (0 < port && port < 65536) {
-        try {
-          socket = await Socket.connect(host, port, timeout: timeout);
-          report.addOpen(port: port);
-        } catch (e) {
-          report.addClosed(port: port);
-        } finally {
-          await socket?.close();
-        }
-      } else {
-        throw SocketException('Invalid port: $port', address: InternetAddress(host), port: port);
+      try {
+        socket = await Socket.connect(host, port, timeout: timeout);
+        report.addOpen(port: port);
+      } catch (e) {
+        report.addClosed(port: port);
+      } finally {
+        await socket?.close();
       }
     }
     // Send a report
