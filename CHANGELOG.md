@@ -34,3 +34,6 @@
 
 ## 2.0.4
 - Examples and readme improvements
+
+## 2.0.5
+- Fixed a memory leak

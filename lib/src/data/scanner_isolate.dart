@@ -41,6 +41,7 @@ class ScannerIsolate {
     _isolate =
         await Isolate.spawn(_scan, ScannerIsolateArgs(sendPort: _fromIsolate.sendPort, host: host, ports: ports));
     _report = await scanResult.stream.first;
+    terminate();
     return report;
   }
 
