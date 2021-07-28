@@ -28,3 +28,9 @@
 
 ## 2.0.2
 - Added exceptions throwing to the constructor
+
+## 2.0.3
+- Exceptions throwing fix
+
+## 2.0.4
+- Examples and readme improvements

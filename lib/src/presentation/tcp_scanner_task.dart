@@ -22,6 +22,8 @@ class TcpScannerTask {
       throw TcpScannerTaskException('Ports list is empty');
     } else if (parallelism < 1) {
       throw TcpScannerTaskException('\'parallelism\' should be a positive number');
+    } else if (ports.any((port)=> port < 0 || 65535 < port )) {
+      throw TcpScannerTaskException('Some port is out of range 0-65535');
     }
     //  Copy ports list and shuffle them if it's needed
     var portsList = ports.toSet().toList();
